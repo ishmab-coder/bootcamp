@@ -1,0 +1,226 @@
+<!DOCTYPE html> 
+<html lang="en"
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>FormAI - Inteligent Form Builder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.gogleapis.comcss2?family=Space+Mono:ital,wght@,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet"href="style.css"/>
+</head>
+<body>
+    
+    <!-- TOP NAV -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">⬡</span>
+      <span class="brand-name">Form<span class="brand-accent">AI</span></span>
+    </div>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" data-tab="builder">Builder</button>
+      <button class="nav-tab" data-tab="templates">Templates</button>
+      <button class="nav-tab" data-tab="export">Export</button>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn-ghost" id="saveBtn">💾 Save</button>
+      <button class="btn-primary" id="exportBtn">Export Code</button>
+    </div>
+  </header>
+
+  <!-- MAIN APP -->
+  <main class="app-grid">
+
+    <!-- LEFT: CHAT PANEL -->
+    <section class="panel panel-chat" id="chatPanel">
+      <div class="panel-header">
+        <span class="panel-label">AI Chat</span>
+        <span class="status-dot" id="aiStatus"></span>
+      </div>
+
+      <div class="chat-messages" id="chatMessages">
+        <!-- Welcome message -->
+        <div class="message message-ai">
+          <div class="message-avatar">AI</div>
+          <div class="message-bubble">
+            Hey! Describe the form you want and I'll build it. Try something like:<br><br>
+            <span class="suggestion-chip" onclick="usePrompt(this)">"Create a login form"</span>
+            <span class="suggestion-chip" onclick="usePrompt(this)">"Build a contact form"</span>
+            <span class="suggestion-chip" onclick="usePrompt(this)">"Make a registration form"</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <div class="prompt-suggestions" id="promptSuggestions">
+          <span class="suggestion-chip small" onclick="usePrompt(this)">Login form</span>
+          <span class="suggestion-chip small" onclick="usePrompt(this)">Contact form</span>
+          <span class="suggestion-chip small" onclick="usePrompt(this)">Survey form</span>
+          <span class="suggestion-chip small" onclick="usePrompt(this)">Job application</span>
+        </div>
+        <div class="input-row">
+          <textarea id="chatInput" class="chat-textarea" placeholder="Describe your form..." rows="2"></textarea>
+          <button class="btn-send" id="sendBtn" onclick="sendMessage()">
+            <span>→</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MIDDLE: FORM PREVIEW -->
+    <section class="panel panel-preview" id="previewPanel">
+      <div class="panel-header">
+        <span class="panel-label">Live Preview</span>
+        <div class="preview-controls">
+          <button class="icon-btn" title="Mobile view" onclick="toggleMobile()">📱</button>
+          <button class="icon-btn" title="Desktop view" onclick="toggleDesktop()">🖥️</button>
+        </div>
+      </div>
+
+      <div class="preview-wrapper" id="previewWrapper">
+        <div class="preview-phone-bar" id="phoneBar" style="display:none;">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="form-container" id="formContainer">
+          <div class="form-empty-state" id="emptyState">
+            <div class="empty-icon">⬡</div>
+            <p>Your form will appear here</p>
+            <small>Start by describing it in the chat, or pick a template</small>
+          </div>
+
+          <!-- Generated form renders here -->
+          <form id="liveForm" class="live-form" style="display:none;" onsubmit="handleSubmit(event)">
+            <h2 class="form-title" id="formTitle">My Form</h2>
+            <div id="formFields"></div>
+            <button type="submit" class="btn-submit">Submit</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Validation feedback -->
+      <div class="validation-toast" id="validationToast"></div>
+    </section>
+
+    <!-- RIGHT: FORM EDITOR -->
+    <section class="panel panel-editor" id="editorPanel">
+      <div class="panel-header">
+        <span class="panel-label">Form Editor</span>
+        <button class="btn-add-field" onclick="openAddFieldModal()">+ Add Field</button>
+      </div>
+
+      <div class="editor-form-title">
+        <input type="text" id="formTitleInput" placeholder="Form title..." value="My Form" oninput="updateFormTitle(this.value)" />
+      </div>
+
+      <div class="fields-list" id="fieldsList">
+        <div class="fields-empty">No fields yet. Add one above or use the chat.</div>
+      </div>
+
+      <!-- Field count -->
+      <div class="editor-footer">
+        <span id="fieldCount">0 fields</span>
+        <button class="btn-ghost small" onclick="clearAllFields()">Clear all</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================
+       EXPORT PANEL (hidden tab)
+       ======================== -->
+  <div class="tab-panel" id="exportPanel" style="display:none;">
+    <div class="export-header">
+      <h2>Export Your Form Code</h2>
+      <p>Copy this React component and paste it into your project.</p>
+    </div>
+    <div class="code-toolbar">
+      <span class="code-lang-badge">JSX</span>
+      <div class="code-actions">
+        <button class="btn-ghost" onclick="copyCode()">📋 Copy</button>
+        <button class="btn-primary" onclick="downloadCode()">⬇ Download .jsx</button>
+      </div>
+    </div>
+    <div class="code-block-wrapper">
+      <pre class="code-block" id="codeOutput"><code id="codeContent">// Your form code will appear here
+// Build a form first using the Builder tab</code></pre>
+    </div>
+  </div>
+
+  <!-- ========================
+       TEMPLATES TAB (hidden)
+       ======================== -->
+  <div class="tab-panel" id="templatesPanel" style="display:none;">
+    <div class="templates-grid" id="templatesGrid">
+      <!-- Templates injected by JS -->
+    </div>
+  </div>
+
+  <!-- ========================
+       ADD FIELD MODAL
+       ======================== -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add New Field</h3>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Field Label</label>
+          <input type="text" id="fieldLabel" placeholder="e.g. Email Address" />
+        </div>
+        <div class="form-group">
+          <label>Field Type</label>
+          <select id="fieldType">
+            <option value="text">Text</option>
+            <option value="email">Email</option>
+            <option value="password">Password</option>
+            <option value="number">Number</option>
+            <option value="textarea">Textarea</option>
+            <option value="checkbox">Checkbox</option>
+            <option value="select">Dropdown</option>
+            <option value="date">Date</option>
+            <option value="file">File Upload</option>
+            <option value="radio">Radio Group</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Placeholder Text</label>
+          <input type="text" id="fieldPlaceholder" placeholder="Optional placeholder..." />
+        </div>
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" id="fieldRequired" />
+            Required field
+          </label>
+        </div>
+        <!-- Options for select/radio -->
+        <div class="form-group" id="optionsGroup" style="display:none;">
+          <label>Options (one per line)</label>
+          <textarea id="fieldOptions" placeholder="Option 1&#10;Option 2&#10;Option 3" rows="4"></textarea>
+        </div>
+        <!-- Min/Max for number -->
+        <div class="form-group-row" id="numberGroup" style="display:none;">
+          <div class="form-group">
+            <label>Min Value</label>
+            <input type="number" id="fieldMin" placeholder="0" />
+          </div>
+          <div class="form-group">
+            <label>Max Value</label>
+            <input type="number" id="fieldMax" placeholder="100" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn-primary" id="modalSaveBtn" onclick="saveField()">Add Field</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVED FORMS TOAST -->
+  <div class="save-toast" id="saveToast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
